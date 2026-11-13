@@ -251,6 +251,38 @@
   .auto-line{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);background:var(--coral-soft);border-radius:12px;padding:10px 12px}
   .auto-line .ic{flex:none;width:28px;height:28px;border-radius:8px;background:#fff;display:grid;place-items:center;color:var(--coral-ink)}
   .auto-line a,.auto-line button.link{color:var(--coral-ink);font-weight:600;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
+
+  /* tarefas | notas */
+  .views{display:flex;background:#EAE6F8;border-radius:14px;padding:4px;gap:4px}
+  .views button{flex:1;border:0;background:transparent;border-radius:11px;padding:9px 10px;font-weight:600;font-size:14.5px;color:var(--muted);display:flex;justify-content:center;align-items:center;gap:7px}
+  .views button .n{font-size:12px;font-weight:500;opacity:.75}
+  .views button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(43,38,80,.12)}
+  .note-ic{flex:none;width:26px;height:26px;border-radius:9px;background:var(--coral-soft);color:var(--coral-ink);display:grid;place-items:center;margin-top:-1px}
+  .note-snip{color:var(--muted);font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+  .tag.task{background:var(--sun-soft);color:var(--sun-ink);max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .tag.task.done{background:var(--mint-soft);color:var(--mint)}
+  .kind-pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;background:var(--coral-soft);color:var(--coral-ink);border-radius:999px;padding:6px 11px}
+  #note-detail{display:flex;flex-direction:column;flex:1}
+  #note-detail[hidden]{display:none!important}
+  .link-task{display:flex;align-items:center;gap:10px;border:1.5px solid #CFDDFB;background:var(--sun-soft);border-radius:14px;padding:10px 12px;text-align:left;color:var(--ink);width:100%}
+  .link-task:hover{border-color:var(--sun)}
+  .link-task[hidden]{display:none}
+  .link-task .ic{flex:none;width:30px;height:30px;border-radius:9px;background:#fff;color:var(--sun-ink);display:grid;place-items:center}
+  .link-task .txt{flex:1;min-width:0}
+  .link-task strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .link-task .txt span{display:block;font-size:12.5px;color:var(--muted)}
+  .linked{display:flex;flex-direction:column;gap:10px}
+  .linked-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .linked-head h3{margin:0;font-family:var(--display);font-weight:600;font-size:17px;display:flex;align-items:center;gap:8px}
+  .linked-head .n{font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted)}
+  .mini.strong{border-color:var(--coral-soft);background:var(--coral-soft);color:var(--coral-ink);font-weight:600;padding:6px 12px}
+  .linked-list{display:flex;flex-direction:column;gap:6px}
+  .linked-item{display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;text-align:left;width:100%;color:var(--ink)}
+  .linked-item:hover{border-color:var(--line-2);background:#F8F6FE}
+  .linked-item .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .linked-item strong{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+  .linked-empty{font-size:13.5px;color:var(--muted);padding:2px 2px}
+  #d-link-wrap[hidden]{display:none}
   #auto-opts[hidden]{display:none!important}
 
   /* ---------- responsivo ---------- */
@@ -330,6 +362,11 @@
       <p id="summary">Carregando suas tarefas…</p>
     </div>
 
+    <div class="views" role="group" aria-label="O que mostrar">
+      <button id="v-tasks" aria-pressed="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>Tarefas <span class="n" id="v-tasks-n">0</span></button>
+      <button id="v-notes" aria-pressed="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5zM9 9h6M9 13h6M9 17h3"/></svg>Notas <span class="n" id="v-notes-n">0</span></button>
+    </div>
+
     <div class="lists" id="lists" role="group" aria-label="Listas"></div>
 
     <form class="add" id="add-form" autocomplete="off">
@@ -351,8 +388,8 @@
       <div class="panel-empty" id="panel-empty">
         <div>
           <div class="art" id="pair-art" aria-hidden="true"></div>
-          <strong>Escolha uma tarefa</strong>
-          Aqui você vê os detalhes e anota tudo o que precisar.
+          <strong id="pe-t">Escolha uma tarefa</strong>
+          <span id="pe-s">Aqui você vê os detalhes e anota tudo o que precisar.</span>
         </div>
       </div>
 
@@ -443,6 +480,18 @@
             </div>
           </div>
 
+          <div class="linked">
+            <div class="linked-head">
+              <h3>Notas ligadas <span class="n" id="d-linked-n"></span></h3>
+              <button class="mini strong" id="d-add-note">+ Nova nota</button>
+            </div>
+            <div class="linked-list" id="d-linked-list"></div>
+            <div class="field" id="d-link-wrap">
+              <label class="label" for="d-link-existing">Ligar uma nota que já existe</label>
+              <select id="d-link-existing" class="input"></select>
+            </div>
+          </div>
+
         </div>
 
         <div class="d-foot">
@@ -450,6 +499,54 @@
           <button class="del" id="d-delete">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
             Apagar tarefa
+          </button>
+        </div>
+      </div>
+
+      <div id="note-detail" hidden>
+        <div class="d-head">
+          <button class="icon-btn back" id="n-back" aria-label="Voltar para as notas">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span class="kind-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 4h14v16H5zM9 9h6M9 13h6M9 17h3"/></svg>Nota</span>
+          <div class="spacer"></div>
+        </div>
+        <div class="d-body">
+          <label for="n-title" class="sr">Título da nota</label>
+          <textarea id="n-title" class="d-title" rows="1" placeholder="Dê um título para a nota" maxlength="200"></textarea>
+          <div class="fields">
+            <div class="field">
+              <label class="label" for="n-list">Lista</label>
+              <select id="n-list" class="input"></select>
+            </div>
+            <div class="field">
+              <label class="label" for="n-task">Ligada à tarefa</label>
+              <select id="n-task" class="input"></select>
+            </div>
+          </div>
+          <button class="link-task" id="n-open-task" hidden>
+            <span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></span>
+            <span class="txt"><strong id="n-open-task-t"></strong><span id="n-open-task-s"></span></span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <div class="notes-wrap">
+            <div class="notes-head">
+              <h3><span id="n-notes-icon" class="mini-cat" aria-hidden="true"></span> Anotações</h3>
+              <span class="saved" id="n-saved" aria-live="polite"></span>
+            </div>
+            <div class="notes-box">
+              <div class="peek-head" id="n-peek-head" aria-hidden="true"></div>
+              <div class="peek-paws" id="n-peek-paws" aria-hidden="true"></div>
+              <label for="n-body" class="sr">Texto da nota</label>
+              <textarea id="n-body" class="notes" placeholder="Escreva o que quiser: ideias, listas, links, o que não pode esquecer…"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="d-foot">
+          <span id="n-edited"></span>
+          <button class="del" id="n-delete">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+            Apagar nota
           </button>
         </div>
       </div>
@@ -607,11 +704,13 @@ const CATS = (() => {
   const LIST_COLORS = ['#8B6CF0','#5B8DEF','#E05CA0','#2E9E7E','#F08A5D','#827DA3'];
   const DEFAULT_SETTINGS = { name:'' };
 
-  const state = { tasks:{}, lists:{}, selected:null, filter:'all', list:'all', showDone:false, settings:{...DEFAULT_SETTINGS}, mode:'loading' };
+  const state = { tasks:{}, notes:{}, lists:{}, view:'tasks', noteFilter:'all', selected:null, filter:'all', list:'all', showDone:false, settings:{...DEFAULT_SETTINGS}, mode:'loading' };
   let db = null, uid = null, coll = null;
   const lsGet = (k, d=null) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } };
   const lsSet = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
   state.list = (lsGet(LS_UI) || {}).list || 'all';
+  state.view = (lsGet(LS_UI) || {}).view === 'notes' ? 'notes' : 'tasks';
+  const saveUI = () => lsSet(LS_UI, {list:state.list, view:state.view});
 
   /* ---------- helpers ---------- */
   const pad = n => String(n).padStart(2,'0');
@@ -653,6 +752,7 @@ const CATS = (() => {
   const ICON_ALERT = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>';
   const ICON_NOTE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 4h14v16H5zM9 9h6M9 13h6M9 17h3"/></svg>';
   const ICON_CHEV = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  const ICON_CHECKC = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>';
   const ICON_EDIT = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
   const isMobile = () => window.matchMedia('(max-width: 860px)').matches;
 
@@ -676,6 +776,7 @@ const CATS = (() => {
   function getItem(id){
     if(id === SETTINGS_ID) return { kind:'settings', ...state.settings };
     if(state.tasks[id]) return state.tasks[id];
+    if(state.notes[id]) return state.notes[id];
     if(state.lists[id]) return state.lists[id];
     return null;
   }
@@ -684,9 +785,10 @@ const CATS = (() => {
     if(id === SETTINGS_ID || d.kind === 'settings'){ const { kind, id:_i, ...rest } = d; state.settings = {...DEFAULT_SETTINGS, ...state.settings, ...rest}; }
     else if(d.kind === 'task') state.tasks[id] = {...d, id};
     else if(d.kind === 'list') state.lists[id] = {...d, id};
+    else if(d.kind === 'note') state.notes[id] = {...d, id};
   }
-  function removeItem(id){ delete state.tasks[id]; delete state.lists[id]; }
-  const allIds = () => [...Object.keys(state.tasks), ...Object.keys(state.lists)];
+  function removeItem(id){ delete state.tasks[id]; delete state.lists[id]; delete state.notes[id]; }
+  const allIds = () => [...Object.keys(state.tasks), ...Object.keys(state.lists), ...Object.keys(state.notes)];
 
   /* ---------- salvar ---------- */
   const writers = {}; const timers = {}; const pendingDeletes = {};
@@ -694,7 +796,7 @@ const CATS = (() => {
 
   function scheduleSave(id, delay=0){
     clearTimeout(timers[id]);
-    const it = state.tasks[id] || state.lists[id]; if(it) it.updatedAt = Date.now();
+    const it = state.tasks[id] || state.lists[id] || state.notes[id]; if(it) it.updatedAt = Date.now();
     showSaving(id);
     timers[id] = setTimeout(() => { delete timers[id]; persist(id); }, delay);
   }
@@ -728,22 +830,24 @@ const CATS = (() => {
     else toast('Não consegui salvar agora. Confira a internet e edite de novo.', null, 5000);
     $('#saved').textContent = '';
   }
-  function showSaving(id){ if(id === state.selected) $('#saved').textContent = 'Salvando…'; }
-  function showSaved(id){ if(id === state.selected && !isPending(id)) $('#saved').textContent = 'Salvo ✓'; }
+  const savedEl = id => state.notes[id] ? $('#n-saved') : $('#saved');
+  function showSaving(id){ if(id === state.selected) savedEl(id).textContent = 'Salvando…'; }
+  function showSaved(id){ if(id === state.selected && !isPending(id)) savedEl(id).textContent = 'Salvo ✓'; }
 
   function loadLocal(){
     const d = lsGet(LS_KEY); if(!d) return;
     for(const k in (d.tasks||{})) state.tasks[k] = {...d.tasks[k], id:k, kind:'task'};
     for(const k in (d.lists||{})) state.lists[k] = {...d.lists[k], id:k, kind:'list'};
+    for(const k in (d.notes||{})) state.notes[k] = {...d.notes[k], id:k, kind:'note'};
     state.settings = {...DEFAULT_SETTINGS, ...(d.settings||{})};
   }
-  function saveLocal(){ lsSet(LS_KEY, {tasks:state.tasks, lists:state.lists, settings:state.settings}); }
+  function saveLocal(){ lsSet(LS_KEY, {tasks:state.tasks, lists:state.lists, notes:state.notes, settings:state.settings}); }
 
   // leva o que estava só no navegador para a nuvem/planilha, uma vez
   function migrateLocal(){
     const local = lsGet(LS_KEY); if(!local) return;
-    const items = [...Object.entries(local.tasks||{}).map(([k,v]) => [k,{...v, kind:'task'}]), ...Object.entries(local.lists||{}).map(([k,v]) => [k,{...v, kind:'list'}])]
-      .filter(([k]) => !state.tasks[k] && !state.lists[k]);
+    const items = [...Object.entries(local.tasks||{}).map(([k,v]) => [k,{...v, kind:'task'}]), ...Object.entries(local.lists||{}).map(([k,v]) => [k,{...v, kind:'list'}]), ...Object.entries(local.notes||{}).map(([k,v]) => [k,{...v, kind:'note'}])]
+      .filter(([k]) => !state.tasks[k] && !state.lists[k] && !state.notes[k]);
     if(items.length){
       items.forEach(([k,v]) => { applyItem(k, v); scheduleSave(k, 50); });
       toast(`Trouxe ${items.length} ${items.length>1?'itens':'item'} deste navegador`, null, 3200, 'magali');
@@ -803,15 +907,15 @@ const CATS = (() => {
   function renderLists(){
     const box = $('#lists'); box.textContent = '';
     if(state.list !== 'all' && !state.lists[state.list] && state.mode !== 'loading') state.list = 'all';
-    const tasks = Object.values(state.tasks).filter(t => !t.done);
-    const tab = (id, name, color, n) => el('button', {class:'ltab', 'aria-pressed': String(state.list === id), onclick:()=>{ state.list = id; lsSet(LS_UI, {list:id}); render(); }},
+    const tasks = state.view === 'notes' ? Object.values(state.notes) : Object.values(state.tasks).filter(t => !t.done);
+    const tab = (id, name, color, n) => el('button', {class:'ltab', 'aria-pressed': String(state.list === id), onclick:()=>{ state.list = id; state.list = id; saveUI(); render(); }},
       color ? el('span', {class:'dot', style:`background:${color}`}) : null, name, el('span', {class:'n'}, String(n)));
     box.append(tab('all', 'Todas', null, tasks.length));
     listsSorted().forEach(l => box.append(tab(l.id, l.name, l.color, tasks.filter(t => t.listId === l.id).length)));
     if(state.list !== 'all'){ const b = el('button', {class:'ltab edit', 'aria-label':'Editar lista', title:'Editar lista', onclick:()=>openListModal(state.list)}, svg(ICON_EDIT)); box.append(b); }
     box.append(el('button', {class:'ltab new', onclick:()=>openListModal(null)}, '+ Nova lista'));
     const cur = state.lists[state.list];
-    $('#new-title').placeholder = cur ? `Nova tarefa em “${cur.name}”` : 'O que você precisa fazer?';
+    $('#new-title').placeholder = state.view === 'notes' ? (cur ? `Nova nota em “${cur.name}”` : 'Título da nova nota') : (cur ? `Nova tarefa em “${cur.name}”` : 'O que você precisa fazer?');
   }
 
   let editingList = null, pickedColor = LIST_COLORS[0], delArmed = false;
@@ -836,7 +940,7 @@ const CATS = (() => {
     if(!name){ $('#lm-name').focus(); return; }
     let id = editingList;
     if(id){ Object.assign(state.lists[id], {name, color:pickedColor}); }
-    else { id = newId('l'); state.lists[id] = { id, kind:'list', name, color:pickedColor, createdAt:Date.now(), updatedAt:Date.now() }; state.list = id; lsSet(LS_UI, {list:id}); }
+    else { id = newId('l'); state.lists[id] = { id, kind:'list', name, color:pickedColor, createdAt:Date.now(), updatedAt:Date.now() }; state.list = id; state.list = id; saveUI(); }
     scheduleSave(id);
     $('#list-modal').classList.remove('open');
     render(); fillDetail();
@@ -846,12 +950,12 @@ const CATS = (() => {
   $('#lm-del').addEventListener('click', () => {
     if(!delArmed){ delArmed = true; $('#lm-del').textContent = 'Apagar mesmo?'; return; }
     const id = editingList; if(!id) return;
-    Object.values(state.tasks).forEach(t => { if(t.listId === id){ t.listId = ''; scheduleSave(t.id); } });
+    [...Object.values(state.tasks), ...Object.values(state.notes)].forEach(t => { if(t.listId === id){ t.listId = ''; scheduleSave(t.id); } });
     delete state.lists[id]; scheduleSave(id);
-    state.list = 'all'; lsSet(LS_UI, {list:'all'});
+    state.list = 'all'; saveUI();
     $('#list-modal').classList.remove('open');
     render(); fillDetail();
-    toast('Lista apagada. As tarefas continuam em “Todas”.');
+    toast('Lista apagada. As tarefas e notas continuam em “Todas”.');
   });
 
   /* ---------- lista de tarefas ---------- */
@@ -890,6 +994,14 @@ const CATS = (() => {
       : bits.length ? cap(bits.join(' · ')) + '.' : `${c.gPending} ${c.gPending>1?'tarefas pendentes':'tarefa pendente'}, sem pressa.`;
 
     renderLists();
+    $('#v-tasks').setAttribute('aria-pressed', String(state.view === 'tasks'));
+    $('#v-notes').setAttribute('aria-pressed', String(state.view === 'notes'));
+    $('#v-tasks-n').textContent = c.gPending;
+    $('#v-notes-n').textContent = Object.keys(state.notes).length;
+    $('#hint').textContent = state.view === 'notes' ? 'A nota pode ficar solta ou ligada a uma tarefa.' : 'Dica: termine com “hoje” ou “amanhã” para já colocar a data.';
+    $('#add-btn').setAttribute('aria-label', state.view === 'notes' ? 'Criar nota' : 'Adicionar tarefa');
+    $('#add-btn .lbl').textContent = state.view === 'notes' ? 'Criar' : 'Adicionar';
+    if(state.view === 'notes'){ renderNotes(); return; }
 
     const chips = $('#chips'); chips.textContent = '';
     [['all','Todas',c.all],['pending','Pendentes',c.pending],['blocked','Travadas',c.blocked],['done','Concluídas',c.done]].forEach(([k,label,n]) => {
@@ -954,7 +1066,9 @@ const CATS = (() => {
     if(t.blocked && !t.done) meta.append(el('span', {class:'tag blocked'}, svg(ICON_ALERT), t.blockedWho ? `Travada · ${t.blockedWho}` : 'Travada'));
     const l = state.lists[t.listId];
     if(l && state.list === 'all') meta.append(el('span', {class:'tag list'}, el('span',{class:'dot', style:`background:${l.color}`}), l.name));
-    if(t.notes && t.notes.trim()) meta.append(el('span', {class:'tag has-notes', title:'Tem anotações'}, svg(ICON_NOTE), 'Notas'));
+    const nLinked = linkedNotes(t.id).length;
+    if(nLinked) meta.append(el('span', {class:'tag has-notes', title:'Notas ligadas'}, svg(ICON_NOTE), nLinked > 1 ? `${nLinked} notas` : '1 nota'));
+    else if(t.notes && t.notes.trim()) meta.append(el('span', {class:'tag has-notes', title:'Tem anotações'}, svg(ICON_NOTE), 'Anotações'));
 
     const check = el('button', {class:'check' + (t.done ? ' on':''), role:'checkbox', 'aria-checked': String(!!t.done), 'aria-label': t.done ? `Reabrir “${t.title}”` : `Concluir “${t.title}”`,
       onclick:(e)=>{ e.stopPropagation(); toggleDone(t.id, e.currentTarget); }}, svg(ICON_CHECK));
@@ -963,6 +1077,73 @@ const CATS = (() => {
       onclick:()=>select(t.id), onkeydown:(e)=>{ if((e.key==='Enter' || e.key===' ') && e.target === r){ e.preventDefault(); select(t.id); } }}, check, main);
     return r;
   }
+
+  /* ---------- notas ---------- */
+  const linkedNotes = taskId => Object.values(state.notes).filter(n => n.taskId === taskId && !pendingDeletes[n.id]).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
+  const snippet = s => (s || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+  function whenLabel(ms){
+    if(!ms) return '';
+    const d = new Date(ms), diff = dayDiff(ymd(d));
+    return diff === 0 ? `hoje, ${pad(d.getHours())}:${pad(d.getMinutes())}` : diff === -1 ? 'ontem' : `${d.getDate()} ${MON[d.getMonth()]}`;
+  }
+  function renderNotes(){
+    const scope = Object.values(state.notes).filter(inList);
+    const loose = scope.filter(n => !state.tasks[n.taskId]);
+    const linked = scope.filter(n => state.tasks[n.taskId]);
+    const chips = $('#chips'); chips.textContent = '';
+    [['all','Todas',scope.length],['loose','Soltas',loose.length],['linked','Ligadas a tarefas',linked.length]].forEach(([k,label,n]) => {
+      chips.append(el('button', {class:'chip', 'aria-pressed': String(state.noteFilter===k), onclick:()=>{ state.noteFilter = k; render(); }}, label, el('span',{class:'n'}, String(n))));
+    });
+    const box = $('#groups'); box.textContent = '';
+    if(state.mode === 'loading') return;
+    const list = (state.noteFilter === 'loose' ? loose : state.noteFilter === 'linked' ? linked : scope).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
+    if(!list.length){
+      const curList = state.lists[state.list];
+      const E = {
+        all: curList ? [CATS.peek(), `Nenhuma nota em “${curList.name}”`, 'Escreva um título ali em cima para criar a primeira.']
+                     : [CATS.peek(), 'Nenhuma nota ainda', 'Ideias, listas, links, o que não pode esquecer. Escreva um título ali em cima para começar.'],
+        loose: [CATS.happy(), 'Nenhuma nota solta', 'Todas as suas notas estão ligadas a alguma tarefa.'],
+        linked: [CATS.sleep(), 'Nenhuma nota ligada', 'Abra uma nota e escolha uma tarefa em “ligada à tarefa”.'],
+      }[state.noteFilter];
+      const art = el('div',{class:'art','aria-hidden':'true'}); art.innerHTML = E[0];
+      box.append(el('div',{class:'empty'}, art, el('strong',{},E[1]), E[2]));
+      return;
+    }
+    const rows = el('div', {class:'rows'});
+    list.forEach(n => rows.append(noteRow(n)));
+    box.append(rows);
+  }
+  function noteRow(n){
+    const meta = el('div', {class:'row-meta'});
+    const t = state.tasks[n.taskId];
+    if(t) meta.append(el('span', {class:'tag task' + (t.done ? ' done' : '')}, svg(ICON_CHECKC), t.title || 'Tarefa'));
+    const l = state.lists[n.listId];
+    if(l && state.list === 'all') meta.append(el('span', {class:'tag list'}, el('span',{class:'dot', style:`background:${l.color}`}), l.name));
+    meta.append(el('span', {class:'tag has-notes'}, cap(whenLabel(n.updatedAt || n.createdAt))));
+    const snip = snippet(n.body);
+    const main = el('div', {class:'row-main'}, el('span', {class:'row-title'}, n.title || 'Nota sem título'), snip ? el('span', {class:'note-snip'}, snip) : null, meta);
+    const ic = el('span', {class:'note-ic', 'aria-hidden':'true'}, svg(ICON_NOTE));
+    const r = el('div', {class:'row' + (state.selected===n.id ? ' sel':''), tabindex:'0', role:'button', 'aria-label': `Abrir nota ${n.title || 'sem título'}`,
+      onclick:()=>select(n.id), onkeydown:(e)=>{ if((e.key==='Enter' || e.key===' ') && e.target === r){ e.preventDefault(); select(n.id); } }}, ic, main);
+    return r;
+  }
+  function newNote(fields={}, open=true){
+    const id = newId('n');
+    state.notes[id] = { id, kind:'note', title:'', body:'', listId: state.list === 'all' ? '' : state.list, taskId:'', createdAt:Date.now(), updatedAt:Date.now(), ...fields };
+    scheduleSave(id);
+    if(open) select(id);
+    return id;
+  }
+  function setView(v){
+    if(state.view === v) return;
+    state.view = v; saveUI();
+    const sel = state.selected;
+    const keep = sel && ((v === 'notes' && state.notes[sel]) || (v === 'tasks' && state.tasks[sel]));
+    if(!keep){ state.selected = null; document.body.classList.remove('detail-open'); }
+    render(); fillDetail();
+  }
+  $('#v-tasks').addEventListener('click', () => setView('tasks'));
+  $('#v-notes').addEventListener('click', () => setView('notes'));
 
   function toggleDone(id, btn){
     const t = state.tasks[id]; if(!t) return;
@@ -983,6 +1164,13 @@ const CATS = (() => {
   $('#add-form').addEventListener('submit', e => {
     e.preventDefault();
     let title = newTitle.value.trim(); if(!title) return;
+    if(state.view === 'notes'){
+      newTitle.value = ''; $('#add-btn').disabled = true;
+      state.noteFilter = 'all';
+      newNote({title});
+      setTimeout(() => N.body.focus(), 30);
+      return;
+    }
     let due = '';
     const m = title.match(/\s+(hoje|amanh[ãa])$/i);
     if(m){ due = /hoje/i.test(m[1]) ? todayStr() : addDays(1); title = title.slice(0, m.index).trim() || title; }
@@ -1003,6 +1191,8 @@ const CATS = (() => {
   };
   function select(id){
     state.selected = id;
+    if(state.notes[id] && state.view !== 'notes'){ state.view = 'notes'; saveUI(); }
+    if(state.tasks[id] && state.view !== 'tasks'){ state.view = 'tasks'; saveUI(); }
     document.body.classList.add('detail-open');
     render(); fillDetail();
     if(isMobile()) window.scrollTo(0,0);
@@ -1013,12 +1203,18 @@ const CATS = (() => {
     render(); fillDetail();
   }
   $('#back').addEventListener('click', closeDetail);
+  $('#n-back').addEventListener('click', closeDetail);
   function autosize(t){ t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
 
   function fillDetail(){
     const t = state.tasks[state.selected];
-    $('#panel-empty').hidden = !!t;
+    const note = state.notes[state.selected];
+    $('#panel-empty').hidden = !!(t || note);
     $('#detail').hidden = !t;
+    $('#note-detail').hidden = !note;
+    $('#pe-t').textContent = state.view === 'notes' ? 'Escolha uma nota' : 'Escolha uma tarefa';
+    $('#pe-s').textContent = state.view === 'notes' ? 'Ou crie uma nova escrevendo o título ali do lado.' : 'Aqui você vê os detalhes e anota tudo o que precisar.';
+    if(note){ fillNote(note); return; }
     if(!t) return;
     const setIf = (input, v) => { if(document.activeElement !== input && input.value !== (v||'')) input.value = v || ''; };
     setIf(D.title, t.title); autosize(D.title);
@@ -1036,8 +1232,33 @@ const CATS = (() => {
     D.created.textContent = `Criada em ${cd.getDate()} de ${MON[cd.getMonth()]}` + (t.done && t.doneAt ? ` · concluída em ${new Date(t.doneAt).getDate()} de ${MON[new Date(t.doneAt).getMonth()]}` : '');
     if(!isPending(t.id)) $('#saved').textContent = t.notes ? 'Salvo ✓' : '';
     updateActions();
+    fillLinked(t);
   }
-  function syncDetailFromState(){ if(state.selected && !state.tasks[state.selected] && !pendingDeletes[state.selected]){ state.selected = null; document.body.classList.remove('detail-open'); } fillDetail(); }
+  function fillLinked(t){
+    const list = linkedNotes(t.id);
+    $('#d-linked-n').textContent = list.length ? String(list.length) : '';
+    const box = $('#d-linked-list'); box.textContent = '';
+    if(!list.length) box.append(el('div', {class:'linked-empty'}, 'Nenhuma nota ligada ainda. Crie uma nova ou ligue uma que já existe.'));
+    list.forEach(n => {
+      const snip = snippet(n.body);
+      box.append(el('button', {class:'linked-item', onclick:()=>select(n.id)},
+        el('span', {class:'note-ic', 'aria-hidden':'true'}, svg(ICON_NOTE)),
+        el('span', {class:'txt'}, el('strong', {}, n.title || 'Nota sem título'), snip ? el('span', {class:'note-snip'}, snip) : null)));
+    });
+    const loose = Object.values(state.notes).filter(n => !state.tasks[n.taskId] && !pendingDeletes[n.id]).sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
+    const sel = $('#d-link-existing'); sel.textContent = '';
+    sel.append(el('option', {value:''}, 'Escolha uma nota solta…'));
+    loose.forEach(n => sel.append(el('option', {value:n.id}, (n.title || 'Nota sem título').slice(0, 60))));
+    $('#d-link-wrap').hidden = !loose.length;
+  }
+  $('#d-add-note').addEventListener('click', () => { const t = cur(); if(!t) return; newNote({taskId:t.id, listId:t.listId || ''}); setTimeout(() => N.title.focus(), 30); toast('Nota ligada a esta tarefa', null, 2400, 'magali'); });
+  $('#d-link-existing').addEventListener('change', e => {
+    const t = cur(); const n = state.notes[e.target.value]; if(!t || !n) return;
+    n.taskId = t.id; if(!n.listId) n.listId = t.listId || '';
+    scheduleSave(n.id); render(); fillLinked(t);
+    toast(`“${n.title || 'Nota'}” ligada a esta tarefa`, null, 2600, 'magali');
+  });
+  function syncDetailFromState(){ if(state.selected && !state.tasks[state.selected] && !state.notes[state.selected] && !pendingDeletes[state.selected]){ state.selected = null; document.body.classList.remove('detail-open'); } fillDetail(); }
 
   function updateActions(){
     const t = state.tasks[state.selected]; if(!t) return;
@@ -1078,12 +1299,66 @@ const CATS = (() => {
   $('#d-delete').addEventListener('click', () => {
     const t = cur(); if(!t) return;
     const id = t.id, copy = {...t};
+    const freed = linkedNotes(id);
+    freed.forEach(n => { n.taskId = ''; scheduleSave(n.id); });
     delete state.tasks[id];
     pendingDeletes[id] = true;
     state.selected = null; document.body.classList.remove('detail-open');
     render(); fillDetail();
     const timer = setTimeout(() => { delete pendingDeletes[id]; persist(id); }, 5000);
-    toast('Tarefa apagada', {label:'Desfazer', fn:()=>{ clearTimeout(timer); delete pendingDeletes[id]; state.tasks[id] = copy; render(); select(id); }}, 5000);
+    toast(freed.length ? `Tarefa apagada. ${freed.length > 1 ? 'As notas ligadas continuam' : 'A nota ligada continua'} em Notas.` : 'Tarefa apagada', {label:'Desfazer', fn:()=>{ clearTimeout(timer); delete pendingDeletes[id]; state.tasks[id] = copy; freed.forEach(n => { if(state.notes[n.id]){ n.taskId = id; scheduleSave(n.id); } }); render(); select(id); }}, 5000);
+  });
+
+  /* ---------- editor de nota ---------- */
+  const N = { title:$('#n-title'), list:$('#n-list'), task:$('#n-task'), body:$('#n-body') };
+  const curNote = () => state.notes[state.selected];
+  function fillNote(n){
+    const setIf = (input, v) => { if(document.activeElement !== input && input.value !== (v||'')) input.value = v || ''; };
+    setIf(N.title, n.title); autosize(N.title);
+    setIf(N.body, n.body);
+    N.list.textContent = '';
+    N.list.append(el('option', {value:''}, 'Sem lista'));
+    listsSorted().forEach(l => N.list.append(el('option', {value:l.id}, l.name)));
+    N.list.value = state.lists[n.listId] ? n.listId : '';
+    N.task.textContent = '';
+    N.task.append(el('option', {value:''}, 'Nenhuma (nota solta)'));
+    const all = Object.values(state.tasks).sort(sortFn);
+    const open = all.filter(t => !t.done), done = all.filter(t => t.done);
+    const opt = t => el('option', {value:t.id}, (t.title || 'Sem título').slice(0, 60) + (t.due ? ` · ${dueLabel(t)}` : ''));
+    if(open.length){ const g = el('optgroup', {label:'Pendentes'}); open.forEach(t => g.append(opt(t))); N.task.append(g); }
+    if(done.length){ const g = el('optgroup', {label:'Concluídas'}); done.forEach(t => g.append(opt(t))); N.task.append(g); }
+    const t = state.tasks[n.taskId];
+    N.task.value = t ? t.id : '';
+    const ob = $('#n-open-task'); ob.hidden = !t;
+    if(t){
+      $('#n-open-task-t').textContent = t.title || 'Tarefa';
+      $('#n-open-task-s').textContent = t.done ? 'Tarefa concluída · abrir' : t.due ? `${dueLabel(t)} · abrir tarefa` : 'Abrir tarefa';
+    }
+    const ed = new Date(n.updatedAt || n.createdAt || Date.now());
+    $('#n-edited').textContent = `Editada ${whenLabel(ed.getTime())}`;
+    if(!isPending(n.id)) $('#n-saved').textContent = n.body ? 'Salvo ✓' : '';
+  }
+  N.title.addEventListener('input', () => { const n = curNote(); if(!n) return; n.title = N.title.value.replace(/\n/g,' '); autosize(N.title); scheduleSave(n.id, 800); render(); });
+  N.title.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); N.body.focus(); } });
+  N.body.addEventListener('input', () => { const n = curNote(); if(!n) return; n.body = N.body.value; scheduleSave(n.id, 900); render(); });
+  N.list.addEventListener('change', () => { const n = curNote(); if(!n) return; n.listId = N.list.value; scheduleSave(n.id); render(); const l = state.lists[n.listId]; toast(l ? `Nota movida para “${l.name}”` : 'Nota sem lista'); });
+  N.task.addEventListener('change', () => {
+    const n = curNote(); if(!n) return; n.taskId = N.task.value;
+    const t = state.tasks[n.taskId];
+    if(t && !n.listId) n.listId = t.listId || '';
+    scheduleSave(n.id); render(); fillNote(n);
+    toast(t ? `Ligada a “${t.title}”` : 'Agora é uma nota solta', null, 2600, 'magali');
+  });
+  $('#n-open-task').addEventListener('click', () => { const n = curNote(); if(n && state.tasks[n.taskId]) select(n.taskId); });
+  $('#n-delete').addEventListener('click', () => {
+    const n = curNote(); if(!n) return;
+    const id = n.id, copy = {...n};
+    delete state.notes[id];
+    pendingDeletes[id] = true;
+    state.selected = null; document.body.classList.remove('detail-open');
+    render(); fillDetail();
+    const timer = setTimeout(() => { delete pendingDeletes[id]; persist(id); }, 5000);
+    toast('Nota apagada', {label:'Desfazer', fn:()=>{ clearTimeout(timer); delete pendingDeletes[id]; state.notes[id] = copy; render(); select(id); }}, 5000);
   });
 
   /* ---------- configurações ---------- */
@@ -1121,6 +1396,9 @@ const CATS = (() => {
   $('#notes-icon').innerHTML = CATS.head('magali');
   $('#peek-head').innerHTML = CATS.head('atena');
   $('#peek-paws').innerHTML = CATS.paws('atena');
+  $('#n-notes-icon').innerHTML = CATS.head('atena','happy');
+  $('#n-peek-head').innerHTML = CATS.head('magali');
+  $('#n-peek-paws').innerHTML = CATS.paws('magali');
   boot();
 })();
 </script>
