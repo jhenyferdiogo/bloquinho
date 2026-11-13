@@ -283,6 +283,20 @@
   .linked-item strong{font-size:14px;font-weight:600;overflow-wrap:anywhere}
   .linked-empty{font-size:13.5px;color:var(--muted);padding:2px 2px}
   #d-link-wrap[hidden]{display:none}
+
+  /* entrada */
+  .login{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 10% -5%,#E6DFFF 0,transparent 45%),radial-gradient(circle at 100% 0,#DFE9FF 0,transparent 40%),var(--paper)}
+  .login[hidden]{display:none}
+  .login-card{width:min(100%,420px);background:#fff;border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);padding:28px 24px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+  .login-card .art{width:230px}
+  .login-card .art svg{width:100%;height:auto;display:block}
+  .login-card h2{margin:4px 0 0;font-family:var(--display);font-weight:600;font-size:25px;letter-spacing:-.02em;line-height:1.15}
+  .login-card p{margin:0;color:var(--muted);font-size:15px}
+  .btn.big{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 18px;font-size:15.5px;border-radius:14px;margin-top:8px}
+  .btn.primary:disabled{opacity:.6}
+  .link-btn{border:0;background:none;color:var(--coral-ink);font-weight:600;padding:8px;border-radius:8px}
+  .link-btn:hover{background:var(--coral-soft)}
+  #acct-sect[hidden]{display:none}
   #auto-opts[hidden]{display:none!important}
 
   /* ---------- responsivo ---------- */
@@ -562,6 +576,14 @@
       <label class="label" for="s-name">Como posso te chamar?</label>
       <input id="s-name" class="input" placeholder="Seu nome" maxlength="40" autocomplete="given-name">
     </div>
+    <div class="sect" id="acct-sect" hidden>
+      <h3>Sua conta</h3>
+      <p id="acct-txt"></p>
+      <div class="btns-inline">
+        <button type="button" class="btn ghost small" id="acct-in" hidden>Entrar com Google</button>
+        <button type="button" class="btn ghost small" id="acct-out" hidden>Sair da conta</button>
+      </div>
+    </div>
     <div class="row-btns">
       <button type="button" class="btn ghost" id="s-cancel">Cancelar</button>
       <button type="submit" class="btn primary">Salvar</button>
@@ -588,6 +610,21 @@
       <button type="submit" class="btn primary" id="lm-save">Criar lista</button>
     </div>
   </form>
+</div>
+
+<!-- entrada -->
+<div class="login" id="login" hidden>
+  <div class="login-card" role="dialog" aria-modal="true" aria-labelledby="login-h">
+    <div class="art" id="login-art" aria-hidden="true"></div>
+    <h2 id="login-h">Seu bloquinho em qualquer lugar</h2>
+    <p>Entre com sua conta Google para guardar tarefas e notas com segurança e ver tudo no celular e no computador.</p>
+    <button class="btn primary big" id="login-google">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+      Entrar com Google
+    </button>
+    <button class="link-btn" id="login-local">Continuar sem conta</button>
+    <span class="help">Sem conta, tudo fica salvo só neste navegador.</span>
+  </div>
 </div>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -697,6 +734,19 @@ const CATS = (() => {
 </script>
 <script>
 (() => {
+  /* ---------- firebase ----------
+     Preencha com a configuração do app da web do seu projeto (console do Firebase → configurações do projeto).
+     Esses dados podem ficar públicos: quem protege as tarefas são as regras de segurança do Firestore. */
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDnEAWUxkIkWid9Kbg2L2OB-7kVOfd1sU8",
+    authDomain: "bloquinho-2a0c5.firebaseapp.com",
+    projectId: "bloquinho-2a0c5",
+    storageBucket: "bloquinho-2a0c5.firebasestorage.app",
+    messagingSenderId: "812771864040",
+    appId: "1:812771864040:web:2685eba64f1673069f485d",
+  };
+  const FIREBASE_VERSION = '13.3.0';
+  const LS_LOCAL_OK = 'bloquinho.semconta';
   const $ = s => document.querySelector(s);
   const LS_KEY = 'bloquinho.v1';          // dados no navegador (modo local)
     const LS_UI = 'bloquinho.ui';           // lista aberta
@@ -706,6 +756,7 @@ const CATS = (() => {
 
   const state = { tasks:{}, notes:{}, lists:{}, view:'tasks', noteFilter:'all', selected:null, filter:'all', list:'all', showDone:false, settings:{...DEFAULT_SETTINGS}, mode:'loading' };
   let db = null, uid = null, coll = null;
+  let fb = null, fbUser = null, fbUnsub = null;
   const lsGet = (k, d=null) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } };
   const lsSet = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
   state.list = (lsGet(LS_UI) || {}).list || 'all';
@@ -813,6 +864,13 @@ const CATS = (() => {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   async function writeOne(id){
     const item = getItem(id);
+    if(state.mode === 'fire'){
+      const ref = fb.F.doc(fb.db, 'users', fbUser.uid, 'items', id);
+      if(!item){ await fb.F.deleteDoc(ref); return; }
+      const { id:_o, ...body } = item;
+      await fb.F.setDoc(ref, JSON.parse(JSON.stringify(body)));
+      return;
+    }
     if(state.mode === 'cloud'){
       const ref = coll.doc(id);
       if(!item){ await ref.delete(); return; }
@@ -858,11 +916,83 @@ const CATS = (() => {
   function setSync(){
     const s = $('#sync'), t = $('#sync-txt');
     s.className = 'sync';
-    if(state.mode === 'cloud'){ s.classList.add('ok'); t.textContent = 'Salvo na nuvem'; s.title = 'Suas tarefas aparecem em qualquer aparelho onde você abrir esta página.'; }
+    if(state.mode === 'fire'){ s.classList.add('ok'); t.textContent = 'Sincronizado'; s.title = fbUser ? `Conectado como ${fbUser.email}. Suas tarefas e notas aparecem em todos os seus aparelhos.` : ''; }
+    else if(state.mode === 'cloud'){ s.classList.add('ok'); t.textContent = 'Salvo na nuvem'; s.title = 'Suas tarefas aparecem em qualquer aparelho onde você abrir esta página.'; }
     else if(state.mode === 'local'){ s.classList.add('local'); t.textContent = 'Salvo neste navegador'; s.title = 'Suas tarefas ficam guardadas neste navegador, neste aparelho.'; }
     else if(state.mode === 'slow'){ s.classList.add('err'); t.textContent = 'Conexão lenta…'; }
     else t.textContent = 'Conectando…';
   }
+
+  /* ---------- firebase ---------- */
+  async function loadFirebase(){
+    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/`;
+    const [appM, A, F] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+    const app = appM.initializeApp(FIREBASE_CONFIG);
+    const auth = A.getAuth(app);
+    auth.languageCode = 'pt';
+    let fdb;
+    try { fdb = F.initializeFirestore(app, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) }); }
+    catch(e){ fdb = F.getFirestore(app); }
+    return { app, auth, db: fdb, A, F };
+  }
+  function resetData(){ state.tasks = {}; state.notes = {}; state.lists = {}; state.settings = {...DEFAULT_SETTINGS}; state.selected = null; document.body.classList.remove('detail-open'); }
+  function showLogin(on){
+    $('#login').hidden = !on;
+    if(on){ $('#login-google').disabled = false; setTimeout(() => $('#login-google').focus(), 30); }
+  }
+  function startFirebase(){
+    fb.A.getRedirectResult(fb.auth).catch(() => {});
+    fb.A.onAuthStateChanged(fb.auth, user => {
+      if(fbUnsub){ fbUnsub(); fbUnsub = null; }
+      fbUser = user;
+      if(user){
+        showLogin(false);
+        resetData(); state.mode = 'loading'; setSync(); render(); fillDetail();
+        const col = fb.F.collection(fb.db, 'users', user.uid, 'items');
+        let first = true;
+        const slow = setTimeout(() => { if(first){ state.mode = 'slow'; setSync(); } }, 10000);
+        fbUnsub = fb.F.onSnapshot(col, snap => {
+          for(const ch of snap.docChanges()){
+            const id = ch.doc.id;
+            if(isPending(id)) continue;
+            if(ch.type === 'removed') removeItem(id); else applyItem(id, ch.doc.data());
+          }
+          if(first){ first = false; clearTimeout(slow); state.mode = 'fire'; setSync(); migrateLocal(); lsSet(LS_LOCAL_OK, null); }
+          render(); syncDetailFromState();
+        }, err => {
+          clearTimeout(slow);
+          toast('Não consegui carregar seus dados. Confira a internet e recarregue a página.', null, 6000);
+        });
+      } else {
+        resetData();
+        if(lsGet(LS_LOCAL_OK)){ loadLocal(); state.mode = 'local'; setSync(); render(); fillDetail(); showLogin(false); }
+        else { state.mode = 'loading'; setSync(); render(); fillDetail(); showLogin(true); }
+      }
+    });
+  }
+  async function signIn(){
+    if(!fb) return;
+    const btn = $('#login-google'); btn.disabled = true;
+    const provider = new fb.A.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try { await fb.A.signInWithPopup(fb.auth, provider); }
+    catch(e){
+      const code = e && e.code;
+      if(code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment'){ await fb.A.signInWithRedirect(fb.auth, provider); return; }
+      if(code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') toast(code === 'auth/unauthorized-domain' ? 'Este endereço ainda não foi liberado no Firebase.' : 'Não consegui entrar agora. Tente de novo.', null, 5000);
+    } finally { btn.disabled = false; }
+  }
+  async function signOutNow(){
+    if(!fb) return;
+    lsSet(LS_LOCAL_OK, null);
+    $('#settings').classList.remove('open');
+    await fb.A.signOut(fb.auth);
+    toast('Você saiu da conta. Até logo!', null, 2600, 'atena');
+  }
+  $('#login-google').addEventListener('click', signIn);
+  $('#login-local').addEventListener('click', () => { lsSet(LS_LOCAL_OK, true); showLogin(false); resetData(); loadLocal(); state.mode = 'local'; setSync(); render(); fillDetail(); });
+  $('#acct-in').addEventListener('click', () => { $('#settings').classList.remove('open'); lsSet(LS_LOCAL_OK, null); saveLocal(); showLogin(true); });
+  $('#acct-out').addEventListener('click', signOutNow);
 
   /* ---------- claude.ai ---------- */
   function startCloud(){
@@ -889,6 +1019,10 @@ const CATS = (() => {
 
   async function boot(){
     render(); setSync();
+    if(FIREBASE_CONFIG && /^https?:/.test(location.protocol)){
+      try { fb = await Promise.race([loadFirebase(), sleep(8000).then(() => null)]); } catch(e){ fb = null; }
+      if(fb){ startFirebase(); return; }
+    }
     const wait = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
     for(let i=0; i<15 && !(window.claude && window.claude.use); i++) await sleep(100);
     let user = null;
@@ -1364,6 +1498,11 @@ const CATS = (() => {
   /* ---------- configurações ---------- */
   function openSettings(){
     $('#s-name').value = state.settings.name || '';
+    $('#acct-sect').hidden = !fb;
+    if(fb){
+      $('#acct-txt').textContent = fbUser ? `Conectada como ${fbUser.email}. Suas tarefas e notas ficam guardadas na sua conta.` : 'Você está usando sem conta: tudo fica salvo só neste navegador.';
+      $('#acct-in').hidden = !!fbUser; $('#acct-out').hidden = !fbUser;
+    }
     $('#settings').classList.add('open');
     $('#s-name').focus();
   }
@@ -1396,6 +1535,7 @@ const CATS = (() => {
   $('#notes-icon').innerHTML = CATS.head('magali');
   $('#peek-head').innerHTML = CATS.head('atena');
   $('#peek-paws').innerHTML = CATS.paws('atena');
+  $('#login-art').innerHTML = CATS.pair();
   $('#n-notes-icon').innerHTML = CATS.head('atena','happy');
   $('#n-peek-head').innerHTML = CATS.head('magali');
   $('#n-peek-paws').innerHTML = CATS.paws('magali');

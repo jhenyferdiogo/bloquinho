@@ -9,6 +9,6 @@ Lista de tarefas com bloco de notas, feita com a Atena e a Magali.
 - Notas separadas das tarefas: podem ficar soltas ou ligadas a uma tarefa
 - Funciona no celular, no tablet e no computador
 
-As tarefas ficam guardadas no navegador de quem usa, no próprio aparelho.
+Quem entra com a conta Google tem tudo guardado no Firebase e sincronizado entre aparelhos. Cada pessoa só vê o que é seu, garantido pelas regras em `firestore.rules`. Também dá para usar sem conta: aí tudo fica salvo só no navegador.
 
 Feito por Jhenyfer Design.
